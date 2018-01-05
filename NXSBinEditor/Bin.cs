@@ -1,47 +1,34 @@
 ﻿using AdvancedBinary;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
-namespace NXSBinEditor
-{
+//#define FULL
+
+namespace NXSBinEditor {
     public class Bin
     {
         Encoding Encoding = Encoding.GetEncoding(932);
         byte[] Script;
-        dynamic Struct;
+        BINStruct Struct;
         public Bin(byte[] Script) {
             this.Script = Script;
         }
 
         public string[] Import() {
-            try {
-                using (Stream Data = new MemoryStream(Script))
-                using (StructReader Reader = new StructReader(Data, Encoding: Encoding)) {
-                    Struct = DefaultStruct();
-                    Reader.ReadStruct(ref Struct);
-
-                    return Struct.Strings;
-                }
-            } catch {
-                try {
-                    using (Stream Data = new MemoryStream(Script))
-                    using (StructReader Reader = new StructReader(Data, Encoding: Encoding)) {
-                        Struct = DefaultSecondStruct();
-                        Reader.ReadStruct(ref Struct);
-
-                        string[] Merged = Struct.Strings;
-                        AppendArray(ref Merged, Struct.StringsCont);
-
-                        return Merged;
-                    }
-                } catch {
-                    throw new Exception("Bad Script Format");
-                }
+            using (Stream Data = new MemoryStream(Script))
+            using (StructReader Reader = new StructReader(Data, Encoding: Encoding)) {
+                Struct = DefaultSecondStruct();
+                Reader.ReadStruct(ref Struct);
+#if FULL
+                string[] Merged = Struct.Strings;
+                AppendArray(ref Merged, Struct.VarNames);
+                return Merged;
+#else
+                return Struct.Strings;
+#endif
             }
         }
+#if FULL
         public void AppendArray<T>(ref T[] Arr, T[] AppendContent) {
             T[] NArr = new T[Arr.LongLength + AppendContent.LongLength];
             Arr.CopyTo(NArr, 0);
@@ -49,32 +36,26 @@ namespace NXSBinEditor
             Arr = null;
             Arr = NArr;
         }
-
+#endif
         public byte[] Export(string[] Strings) {
             using (MemoryStream Data = new MemoryStream())
             using (StructWriter Builder = new StructWriter(Data, Encoding: Encoding)) {
-                if (Struct is BINMainStruct) {
-                    Struct.Strings = Strings;
-                } else {
-                    for (uint i = 0; i < Struct.Strings.LongLength; i++)
+#if FULL
+                for (uint i = 0; i < Struct.Strings.LongLength; i++)
                         Struct.Strings[i] = Strings[i];
-                    for (uint i = 0; i < Struct.StringsCont; i++)
-                        Struct.StringsCont[i] = Strings[i + Struct.Strings.LongLength];
-                }
+                    for (uint i = 0; i < Struct.VarNames.LongLength; i++)
+                        Struct.VarNames[i] = Strings[i + Struct.Strings.LongLength];
+#else
+                Struct.Strings = Strings;
+#endif
 
                 Builder.WriteStruct(ref Struct);
                 return Data.ToArray();
             }
         }
-        public BINMainStruct DefaultStruct() {
-            return new BINMainStruct() {
-                VMWork = VMAlgorithm,
-                ResWork = ResAlgorithm
-            };
-        }
 
-        public BINSecondStruct DefaultSecondStruct() {
-            return new BINSecondStruct() {
+        public BINStruct DefaultSecondStruct() {
+            return new BINStruct() {
                 VMWork = VMAlgorithm,
                 ResWork = ResAlgorithm
             };
@@ -93,6 +74,7 @@ namespace NXSBinEditor
                     throw new EndOfStreamException();
             } else {
                 Stream.Write(Struct.VM, 0, Struct.VM.Length);
+                Stream.Flush();
             }
             return Struct;
         });
@@ -106,34 +88,17 @@ namespace NXSBinEditor
 
                 Struct.Res = new byte[Len];
 
-                if (Stream.Read(Struct.Res, 0, Struct.Res.Length) != Len)
+                if (Stream.Read(Struct.Res, 0, Struct.Res.Length) != Len || Stream.Position != Stream.Length)
                     throw new EndOfStreamException();
             } else {
                 Stream.Write(Struct.Res, 0, Struct.Res.Length);
+                Stream.Flush();
             }
             return Struct;
         });
     }
 
-
-    public struct BINMainStruct {
-        public uint CmdCnt;
-
-        public FieldInvoke VMWork;
-        [Ignore]
-        public byte[] VM;
-
-
-        [PArray(), CString()]
-        public string[] Strings;
-
-        public uint ResCnt;
-
-        public FieldInvoke ResWork;
-        [Ignore]
-        public byte[] Res;
-    }
-    public struct BINSecondStruct {
+    public struct BINStruct {
         public uint CmdCnt;
 
         public FieldInvoke VMWork;
@@ -145,7 +110,7 @@ namespace NXSBinEditor
         public string[] Strings;
 
         [PArray(), CString()]
-        public string[] StringsCont;
+        public string[] VarNames;
 
         public uint ResCnt;
 
