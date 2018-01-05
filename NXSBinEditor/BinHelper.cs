@@ -117,9 +117,9 @@ namespace NXSBinEditor {
                     Str = Str.Substring(0, Str.Length - 2);
                 }
 
-                if (Str.EndsWith(@" ") || Str.ToLower().EndsWith("#")) {
+                if (Str.EndsWith(@" ") || Str.EndsWith("#")) {
+                    Sufix[ID] = Str.Substring(Str.Length - 1, 1) + Sufix[ID];
                     Str = Str.Substring(0, Str.Length - 1);
-                    Sufix[ID] = " " + Sufix[ID];
                 }
             }
 
