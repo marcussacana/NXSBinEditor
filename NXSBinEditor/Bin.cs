@@ -51,7 +51,7 @@ namespace NXSBinEditor
         }
 
         public byte[] Export(string[] Strings) {
-            using (MemoryStream Data = new MemoryStream(Script))
+            using (MemoryStream Data = new MemoryStream())
             using (StructWriter Builder = new StructWriter(Data, Encoding: Encoding)) {
                 if (Struct is BINMainStruct) {
                     Struct.Strings = Strings;

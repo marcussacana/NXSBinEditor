@@ -291,7 +291,7 @@ namespace AdvancedBinary {
             FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (FieldInfo field in fields) {
                 if (HasAttribute(field, Const.IGNORE))
-                    break;
+                    continue;
                 dynamic Value = field.GetValue(Instance);
                 string Type = field.FieldType.ToString();
                 if (!Type.EndsWith("[]")) {
