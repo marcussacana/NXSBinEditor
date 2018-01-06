@@ -2,14 +2,14 @@
 using System.IO;
 using System.Text;
 
-//#define FULL
-
 namespace NXSBinEditor {
     public class Bin
     {
         Encoding Encoding = Encoding.GetEncoding(932);
         byte[] Script;
-        BINStruct Struct;
+        dynamic Struct;
+
+        BinV2 V2Engine;
         public Bin(byte[] Script) {
             this.Script = Script;
         }
@@ -17,56 +17,43 @@ namespace NXSBinEditor {
         public string[] Import() {
             using (Stream Data = new MemoryStream(Script))
             using (StructReader Reader = new StructReader(Data, Encoding: Encoding)) {
-                Struct = new BINStruct();
-                Reader.ReadStruct(ref Struct);
-#if FULL
-                string[] Merged = Struct.Strings;
-                AppendArray(ref Merged, Struct.VarNames);
-                return Merged;
-#else
-                return Struct.Strings;
-#endif
+                Struct = ((Reader.PeekInt() == 0x00) ? (dynamic)new BINv2Struct() : new BINv1Struct());
+                if (Struct is BINv1Struct) {
+                    Reader.ReadStruct(ref Struct);
+                    return Struct.Strings;
+                } else {
+                    V2Engine = new BinV2(Script);
+                    return V2Engine.Import();
+                }
             }
         }
-#if FULL
-        public void AppendArray<T>(ref T[] Arr, T[] AppendContent) {
-            T[] NArr = new T[Arr.LongLength + AppendContent.LongLength];
-            Arr.CopyTo(NArr, 0);
-            AppendContent.CopyTo(NArr, Arr.LongLength);
-            Arr = null;
-            Arr = NArr;
-        }
-#endif
+
         public byte[] Export(string[] Strings) {
             using (MemoryStream Data = new MemoryStream())
             using (StructWriter Builder = new StructWriter(Data, Encoding: Encoding)) {
-#if FULL
-                for (uint i = 0; i < Struct.Strings.LongLength; i++)
-                        Struct.Strings[i] = Strings[i];
-                    for (uint i = 0; i < Struct.VarNames.LongLength; i++)
-                        Struct.VarNames[i] = Strings[i + Struct.Strings.LongLength];
-#else
-                Struct.Strings = Strings;
-#endif
-
-                Builder.WriteStruct(ref Struct);
-                return Data.ToArray();
+                if (Struct is BINv1Struct) {
+                    Struct.Strings = Strings;
+                    Builder.WriteStruct(ref Struct);
+                    return Data.ToArray();
+                } else {
+                    return V2Engine.Export(Strings);
+                }
             }
         }
 
     }
 
 #pragma warning disable 0169
-    public struct BINStruct {
+    public struct BINv1Struct {
 
         [PArray()]
-        ulong[] VM;
+        public ulong[] VM;
 
         [PArray(), CString()]
         public string[] Strings;
 
         [PArray(), CString()]
-        public string[] VarNames;
+        public string[] UnkStr;
 
         [PArray(), StructField()]
         UnkStruct[] UnkData;
@@ -76,5 +63,6 @@ namespace NXSBinEditor {
         [FArray(Length = 0x44)]
         byte[] Unk;
     }
+
 #pragma warning restore 169
 }

@@ -546,7 +546,7 @@ namespace AdvancedBinary {
                         dynamic Count = ReadField(PType, field, ref Instance);
 
                         Value = CreateArrayInstance(FType, Count);
-                        for (long x = 0; x < Count; x++) {
+                        for (ulong x = 0; x < (ulong)Count; x++) {
                             Value[x] = ReadField(FType, field, ref Instance);
                         }
 
@@ -586,7 +586,7 @@ namespace AdvancedBinary {
                     throw new Exception("Unk Variable Type");
             }*/
 			Type ArrType = Type.GetType(TypeName);
-			return Array.CreateInstance(ArrType, InitialLength);
+			return Array.CreateInstance(ArrType, (long)InitialLength);
 			/*
             Type stringArrayType = Type.GetType(TypeName).MakeArrayType();
             return Activator.CreateInstance(stringArrayType, new object[] { InitialLength });*/

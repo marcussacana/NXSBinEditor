@@ -4,6 +4,7 @@ namespace NXSBinEditor {
     public class BinHelper {
         Bin Engine;
 
+        string[] Data;
         Dictionary<uint, string> Prefix = new Dictionary<uint, string>();
         Dictionary<uint, string> Sufix = new Dictionary<uint, string>();
 
@@ -12,7 +13,7 @@ namespace NXSBinEditor {
         }
 
         public string[] Import() {
-            string[] Data = Engine.Import();
+            Data = Engine.Import();
             string[] Strings = new string[0];
             for (uint i = 0; i < Data.LongLength; i++) {
                 if (!IsString(Data[i]))
@@ -25,7 +26,6 @@ namespace NXSBinEditor {
         }
 
         public byte[] Export(string[] Strings) {
-            string[] Data = Engine.Import();
             for (uint i = 0, x = 0; i < Data.LongLength; i++) {
                 if (!IsString(Data[i]))
                     continue;
@@ -50,10 +50,6 @@ namespace NXSBinEditor {
                         Prefix[ID] += Str[0];
                         Str = Str.Substring(1, Str.Length - 1);
                     }
-
-#if DEBUG
-                    System.Diagnostics.Debug.Assert(Prefix[ID].Substring(Prefix[ID].Length - 2, 2).Contains("_"));
-#endif
                 }
 
                 if (Str.ToLower().StartsWith("@v") || Str.ToLower().StartsWith("@s")) {
