@@ -58,6 +58,7 @@ namespace NXSBinEditor {
 
 #pragma warning disable 0169
     public struct BINStruct {
+
         [PArray()]
         ulong[] VM;
 
