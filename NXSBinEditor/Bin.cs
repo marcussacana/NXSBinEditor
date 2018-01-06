@@ -17,7 +17,7 @@ namespace NXSBinEditor {
         public string[] Import() {
             using (Stream Data = new MemoryStream(Script))
             using (StructReader Reader = new StructReader(Data, Encoding: Encoding)) {
-                Struct = DefaultSecondStruct();
+                Struct = new BINStruct();
                 Reader.ReadStruct(ref Struct);
 #if FULL
                 string[] Merged = Struct.Strings;
@@ -54,57 +54,12 @@ namespace NXSBinEditor {
             }
         }
 
-        public BINStruct DefaultSecondStruct() {
-            return new BINStruct() {
-                VMWork = VMAlgorithm,
-                ResWork = ResAlgorithm
-            };
-        }
-
-        /// <summary>
-        /// Skip VM Code
-        /// </summary>
-        FieldInvoke VMAlgorithm = new FieldInvoke((Stream, Reading, Struct) => {
-            if (Reading) {
-                uint Len = Struct.CmdCnt * 8;
-
-                Struct.VM = new byte[Len];
-
-                if (Stream.Read(Struct.VM, 0, Struct.VM.Length) != Len)
-                    throw new EndOfStreamException();
-            } else {
-                Stream.Write(Struct.VM, 0, Struct.VM.Length);
-                Stream.Flush();
-            }
-            return Struct;
-        });
-
-        /// <summary>
-        /// Skip Resources
-        /// </summary>
-        FieldInvoke ResAlgorithm = new FieldInvoke((Stream, Reading, Struct) => {
-            if (Reading) {
-                uint Len = Struct.ResCnt * 0x44;
-
-                Struct.Res = new byte[Len];
-
-                if (Stream.Read(Struct.Res, 0, Struct.Res.Length) != Len || Stream.Position != Stream.Length)
-                    throw new EndOfStreamException();
-            } else {
-                Stream.Write(Struct.Res, 0, Struct.Res.Length);
-                Stream.Flush();
-            }
-            return Struct;
-        });
     }
 
+#pragma warning disable 0169
     public struct BINStruct {
-        public uint CmdCnt;
-
-        public FieldInvoke VMWork;
-        [Ignore]
-        public byte[] VM;
-
+        [PArray()]
+        ulong[] VM;
 
         [PArray(), CString()]
         public string[] Strings;
@@ -112,10 +67,13 @@ namespace NXSBinEditor {
         [PArray(), CString()]
         public string[] VarNames;
 
-        public uint ResCnt;
-
-        public FieldInvoke ResWork;
-        [Ignore]
-        public byte[] Res;
+        [PArray(), StructField()]
+        UnkStruct[] UnkData;
     }
+
+    public struct UnkStruct {
+        [FArray(Length = 0x44)]
+        byte[] Unk;
+    }
+#pragma warning restore 169
 }

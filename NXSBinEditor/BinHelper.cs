@@ -44,7 +44,7 @@ namespace NXSBinEditor {
 
                 if (Str.ToLower().StartsWith("@h")) {
                     Prefix[ID] += Str.Substring(0, 2);
-                    Str = Str.Substring(2, Str.Length - 2);
+                    Str = Str.Substring(2, Str.Length - 2).TrimStart(' ');
 
                     while (Str != string.Empty && ((Str[0] >= 'A' && Str[0] <= 'Z') || Str[0] == '_' || char.IsNumber(Str[0]))) {
                         Prefix[ID] += Str[0];

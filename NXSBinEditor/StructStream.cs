@@ -378,7 +378,7 @@ namespace AdvancedBinary {
                     throw new Exception("String Attribute Not Specified.");
                 default:
                     if (HasAttribute(field, Const.STRUCT)) {
-                        WriteStruct(field.FieldType, ref Value);
+                        WriteStruct(System.Type.GetType(Type), ref Value);
                     } else {
                         if (field.FieldType.BaseType.ToString() == Const.DELEGATE) {
                             FieldInvoke Invoker = ((FieldInvoke)Value);
@@ -656,8 +656,9 @@ namespace AdvancedBinary {
                 default:
                     IsNumber = false;
                     if (Tools.HasAttribute(field, Const.STRUCT)) {
-                        Value = Activator.CreateInstance(field.FieldType);
-                        ReadStruct(field.FieldType, ref Value);
+                        Type t = System.Type.GetType(Type);
+                        Value = Activator.CreateInstance(t);
+                        ReadStruct(t, ref Value);
                     } else {
                         if (field.FieldType.BaseType.ToString() == Const.DELEGATE) {
                             FieldInvoke Invoker = (FieldInvoke)field.GetValue(Instance);
