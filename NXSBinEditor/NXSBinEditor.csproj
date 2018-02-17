@@ -42,6 +42,7 @@
     <Compile Include="Bin.cs" />
     <Compile Include="BinHelper.cs" />
     <Compile Include="Binv2.cs" />
+    <Compile Include="BruteBin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StructStream.cs" />
   </ItemGroup>

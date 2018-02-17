@@ -231,13 +231,21 @@ namespace AdvancedBinary {
                     return true;
             return false;
         }
-        public static void ReadStruct<T>(byte[] Array, ref T Struct, bool IsBigEnddian = false, Encoding Encoding = null, long BaseOffset = 0) {
+        public static long ReadStruct<T>(byte[] Array, ref T Struct, bool IsBigEnddian = false, Encoding Encoding = null, long BaseOffset = 0) {
             MemoryStream Stream = new MemoryStream(Array);
             StructReader Reader = new StructReader(Stream, IsBigEnddian, Encoding);
+
             Reader.Seek(BaseOffset, SeekOrigin.Begin);
+            long Readed = Reader.BaseStream.Position;
+
             Reader.ReadStruct(ref Struct);
+
+            Readed = Reader.BaseStream.Position - Readed;
+
             Reader.Close();
             Stream?.Close();
+
+            return Readed;
         }
 
         public static byte[] BuildStruct<T>(ref T Struct, bool BigEndian = false, Encoding Encoding = null) {
