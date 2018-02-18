@@ -27,6 +27,14 @@ namespace NXSBinEditor {
                         continue;
                     while (Data[i - 1] != 0x00)
                         i--;
+
+                    while ((i - (Structs.Length != 0 ? Offsets.Last() + Lengths.Last() : 0)) % 4 != 0)
+                        i--;
+
+                    uint Cnt = BitConverter.ToUInt32(new byte[] { Data[i], Data[i + 1], Data[i + 2], Data[i + 3] }, 0);
+                    if (Cnt * 2 > Data.Length)
+                        continue;
+
                     BinStrTbl StringData = new BinStrTbl();
                     try {
                         uint Len = (uint)Tools.ReadStruct(Data, ref StringData, false, Encoding, i);
@@ -99,7 +107,7 @@ namespace NXSBinEditor {
     struct BinStrTbl {
         [PArray(), CString()]
         public string[] Strings;
-
+        
         [PArray(), CString()]
         public string[] UnkStr;
 

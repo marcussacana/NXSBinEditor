@@ -1,5 +1,5 @@
 ﻿//Changes the BinHelper Read Method
-//#define BRUTE
+#define BRUTE
 
 using AdvancedBinary;
 using System.IO;
